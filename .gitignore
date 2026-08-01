@@ -1,0 +1,19 @@
+## .NET / Visual Studio
+bin/
+obj/
+*.user
+*.suo
+.vs/
+
+## Windows App SDK / MSIX packaging output
+AppPackages/
+BundleArtifacts/
+*.appx
+*.appxbundle
+*.appxsym
+*.msix
+*.msixbundle
+*.msixupload
+
+## Test results
+TestResults/

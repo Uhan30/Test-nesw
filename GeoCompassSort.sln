@@ -1,0 +1,43 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{2EF9FFE1-8D65-4987-8473-F462D0B4E99A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GeoCompassSort.Core", "src\GeoCompassSort.Core\GeoCompassSort.Core.csproj", "{903F2D8E-D3AF-48D3-91B5-5426478856D8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{24612C73-BE3C-4A91-B7C7-C36336327771}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GeoCompassSort.Core.Tests", "tests\GeoCompassSort.Core.Tests\GeoCompassSort.Core.Tests.csproj", "{7DCA71A8-C860-47A0-A292-2684C3194C8E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GeoCompassSort.App", "src\GeoCompassSort.App\GeoCompassSort.App.csproj", "{DA07B06D-4CB9-4370-9C8F-908CEF34966F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{903F2D8E-D3AF-48D3-91B5-5426478856D8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{903F2D8E-D3AF-48D3-91B5-5426478856D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{903F2D8E-D3AF-48D3-91B5-5426478856D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{903F2D8E-D3AF-48D3-91B5-5426478856D8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7DCA71A8-C860-47A0-A292-2684C3194C8E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7DCA71A8-C860-47A0-A292-2684C3194C8E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7DCA71A8-C860-47A0-A292-2684C3194C8E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7DCA71A8-C860-47A0-A292-2684C3194C8E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DA07B06D-4CB9-4370-9C8F-908CEF34966F}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{DA07B06D-4CB9-4370-9C8F-908CEF34966F}.Debug|Any CPU.Build.0 = Debug|x86
+		{DA07B06D-4CB9-4370-9C8F-908CEF34966F}.Release|Any CPU.ActiveCfg = Release|x86
+		{DA07B06D-4CB9-4370-9C8F-908CEF34966F}.Release|Any CPU.Build.0 = Release|x86
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{903F2D8E-D3AF-48D3-91B5-5426478856D8} = {2EF9FFE1-8D65-4987-8473-F462D0B4E99A}
+		{7DCA71A8-C860-47A0-A292-2684C3194C8E} = {24612C73-BE3C-4A91-B7C7-C36336327771}
+		{DA07B06D-4CB9-4370-9C8F-908CEF34966F} = {2EF9FFE1-8D65-4987-8473-F462D0B4E99A}
+	EndGlobalSection
+EndGlobal
