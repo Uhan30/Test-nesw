@@ -62,7 +62,7 @@ public class PhotoSorterTests : IDisposable
         });
 
         var sorter = new PhotoSorter(reader);
-        var results = sorter.SortPhotos(_sourceFolder, _outputFolder, AssetCentre).ToList();
+        var results = sorter.SortPhotos(new[] { _sourceFolder }, _outputFolder, AssetCentre).ToList();
 
         Assert.Equal(2, results.Count);
         Assert.All(results, r => Assert.Equal(PhotoSortStatus.Sorted, r.Status));
@@ -82,7 +82,7 @@ public class PhotoSorterTests : IDisposable
         var reader = new FakeGpsReader(new Dictionary<string, GpsCoordinate>());
 
         var sorter = new PhotoSorter(reader);
-        var results = sorter.SortPhotos(_sourceFolder, _outputFolder, AssetCentre).ToList();
+        var results = sorter.SortPhotos(new[] { _sourceFolder }, _outputFolder, AssetCentre).ToList();
 
         var result = Assert.Single(results);
         Assert.Equal(PhotoSortStatus.NoGpsData, result.Status);
@@ -96,7 +96,7 @@ public class PhotoSorterTests : IDisposable
         var reader = new FakeGpsReader(new Dictionary<string, GpsCoordinate>());
 
         var sorter = new PhotoSorter(reader);
-        var results = sorter.SortPhotos(_sourceFolder, _outputFolder, AssetCentre).ToList();
+        var results = sorter.SortPhotos(new[] { _sourceFolder }, _outputFolder, AssetCentre).ToList();
 
         Assert.Empty(results);
     }
@@ -114,12 +114,50 @@ public class PhotoSorterTests : IDisposable
         });
 
         var sorter = new PhotoSorter(reader);
-        var results = sorter.SortPhotos(_sourceFolder, _outputFolder, AssetCentre, includeSubfolders: true).ToList();
+        var results = sorter.SortPhotos(new[] { _sourceFolder }, _outputFolder, AssetCentre, includeSubfolders: true).ToList();
 
         Assert.Equal(2, results.Count);
         Assert.All(results, r => Assert.Equal(PhotoSortStatus.Sorted, r.Status));
 
         Assert.True(File.Exists(Path.Combine(_outputFolder, "North", "photo.jpg")));
         Assert.True(File.Exists(Path.Combine(_outputFolder, "North", "photo (1).jpg")));
+    }
+
+    [Fact]
+    public void MixOfLooseFilesAndFolders_AreAllSorted()
+    {
+        // This is the shape a real drag-and-drop of "a few loose photos plus a folder" produces.
+        string looseFile = CreatePhoto("loose.jpg");
+        string subfolder = Directory.CreateDirectory(Path.Combine(_sourceFolder, "batch")).FullName;
+        string folderedFile = CreatePhoto("foldered.jpg", subfolder);
+
+        var reader = new FakeGpsReader(new Dictionary<string, GpsCoordinate>
+        {
+            ["loose.jpg"] = new GpsCoordinate(10, 0),   // North
+            ["foldered.jpg"] = new GpsCoordinate(0, 10), // East
+        });
+
+        var sorter = new PhotoSorter(reader);
+        var results = sorter.SortPhotos(new[] { looseFile, subfolder }, _outputFolder, AssetCentre).ToList();
+
+        Assert.Equal(2, results.Count);
+        Assert.True(File.Exists(Path.Combine(_outputFolder, "North", "loose.jpg")));
+        Assert.True(File.Exists(Path.Combine(_outputFolder, "East", "foldered.jpg")));
+    }
+
+    [Fact]
+    public void OverlappingPaths_DoNotSortTheSameFileTwice()
+    {
+        string filePath = CreatePhoto("photo.jpg");
+        var reader = new FakeGpsReader(new Dictionary<string, GpsCoordinate>
+        {
+            ["photo.jpg"] = new GpsCoordinate(10, 0),
+        });
+
+        var sorter = new PhotoSorter(reader);
+        // The same file reachable both directly and via its containing folder.
+        var results = sorter.SortPhotos(new[] { filePath, _sourceFolder }, _outputFolder, AssetCentre).ToList();
+
+        Assert.Single(results);
     }
 }

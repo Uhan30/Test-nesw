@@ -6,89 +6,236 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <Grid Padding="24" ColumnSpacing="24">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="380" />
-            <ColumnDefinition Width="*" />
-        </Grid.ColumnDefinitions>
+    <Window.SystemBackdrop>
+        <MicaBackdrop />
+    </Window.SystemBackdrop>
 
-        <!-- Left column: inputs -->
-        <StackPanel Grid.Column="0" Spacing="16">
-            <TextBlock Text="Geotagged Photo Compass Sort" Style="{StaticResource TitleTextBlockStyle}" TextWrapping="Wrap" />
-            <TextBlock
-                Text="Enter the asset's centre point, then choose the folder of geotagged photos to sort into North / North-East / East / South-East / South / South-West / West / North-West folders based on where each photo was taken relative to the asset."
-                TextWrapping="Wrap" Opacity="0.8" />
+    <Grid x:Name="RootGrid" Padding="24" RowSpacing="16">
+        <Grid.Resources>
+            <Style x:Key="SectorCardStyle" TargetType="Border">
+                <Setter Property="CornerRadius" Value="16" />
+                <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
+                <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="Padding" Value="12" />
+                <Setter Property="MinHeight" Value="96" />
+            </Style>
+        </Grid.Resources>
 
-            <TextBlock Text="Asset centre point" Style="{StaticResource SubtitleTextBlockStyle}" />
-            <NumberBox
-                x:Name="LatitudeBox"
-                Header="Latitude (decimal degrees, e.g. 53.4808)"
-                PlaceholderText="e.g. 53.4808"
-                SpinButtonPlacementMode="Inline"
-                SmallChange="0.0001" LargeChange="1" />
-            <NumberBox
-                x:Name="LongitudeBox"
-                Header="Longitude (decimal degrees, e.g. -2.2426)"
-                PlaceholderText="e.g. -2.2426"
-                SpinButtonPlacementMode="Inline"
-                SmallChange="0.0001" LargeChange="1" />
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
 
-            <TextBlock Text="Photos" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,8,0,0" />
+        <!-- Header: title + asset centre point -->
+        <Grid Grid.Row="0" ColumnSpacing="20">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
 
-            <StackPanel Orientation="Horizontal" Spacing="8">
-                <TextBox x:Name="SourceFolderBox" Header="Source folder" Width="280" IsReadOnly="True" />
-                <Button Content="Browse…" Click="OnBrowseSourceFolder" VerticalAlignment="Bottom" />
+            <StackPanel Grid.Column="0" Spacing="6">
+                <TextBlock Text="🧭 Geotagged Photo Compass Sort" FontSize="26" FontWeight="SemiBold" />
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <TextBlock Text="Asset centre" VerticalAlignment="Center" Opacity="0.7" />
+                    <NumberBox
+                        x:Name="LatitudeBox"
+                        PlaceholderText="Latitude"
+                        Width="150"
+                        SpinButtonPlacementMode="Compact"
+                        SmallChange="0.0001" LargeChange="1" />
+                    <NumberBox
+                        x:Name="LongitudeBox"
+                        PlaceholderText="Longitude"
+                        Width="150"
+                        SpinButtonPlacementMode="Compact"
+                        SmallChange="0.0001" LargeChange="1" />
+                    <Button Content="Paste “lat, long”" Click="OnPasteCoordinates" />
+                </StackPanel>
             </StackPanel>
 
-            <StackPanel Orientation="Horizontal" Spacing="8">
-                <TextBox x:Name="OutputFolderBox" Header="Output folder" Width="280" IsReadOnly="True" />
-                <Button Content="Browse…" Click="OnBrowseOutputFolder" VerticalAlignment="Bottom" />
+            <StackPanel Grid.Column="1" Spacing="4" HorizontalAlignment="Right" VerticalAlignment="Bottom">
+                <TextBlock
+                    x:Name="OutputFolderText"
+                    Text="Output folder: chosen automatically on first drop"
+                    Opacity="0.7"
+                    TextTrimming="CharacterEllipsis"
+                    TextAlignment="Right"
+                    MaxWidth="320" />
+                <StackPanel Orientation="Horizontal" Spacing="16" HorizontalAlignment="Right">
+                    <HyperlinkButton Content="Change output folder" Click="OnChangeOutputFolder" Padding="0" />
+                    <HyperlinkButton Content="Start new asset" Click="OnResetSession" Padding="0" />
+                </StackPanel>
             </StackPanel>
+        </Grid>
 
-            <CheckBox x:Name="IncludeSubfoldersBox" Content="Include photos in subfolders" />
+        <InfoBar x:Name="StatusBar" Grid.Row="1" IsOpen="False" />
 
-            <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,8,0,0">
-                <Button x:Name="SortButton" Content="Sort Photos" Style="{StaticResource AccentButtonStyle}" Click="OnSortClicked" />
-                <ProgressRing x:Name="Spinner" IsActive="False" Width="24" Height="24" />
-            </StackPanel>
+        <!-- Main content: drop zone + results -->
+        <Grid Grid.Row="2" ColumnSpacing="20">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="320" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
 
-            <InfoBar
-                x:Name="StatusBar"
-                IsOpen="False"
-                Margin="0,8,0,0" />
-        </StackPanel>
+            <!-- Drop zone -->
+            <Border
+                Grid.Column="0"
+                x:Name="DropZoneBorder"
+                AllowDrop="True"
+                DragOver="OnDragOver"
+                DragLeave="OnDragLeave"
+                Drop="OnDrop"
+                Tapped="OnDropZoneTapped"
+                CornerRadius="20"
+                BorderThickness="2"
+                BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                <Border.RenderTransform>
+                    <ScaleTransform x:Name="DropZoneScale" ScaleX="1" ScaleY="1" CenterX="150" CenterY="150" />
+                </Border.RenderTransform>
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="14" Padding="28">
+                    <TextBlock Text="📥" FontSize="52" HorizontalAlignment="Center" />
+                    <TextBlock
+                        Text="Drag photos or a folder here"
+                        FontSize="19" FontWeight="SemiBold"
+                        HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" />
+                    <TextBlock
+                        Text="or click to browse for photos"
+                        Opacity="0.7" HorizontalAlignment="Center" />
+                    <ProgressRing x:Name="Spinner" IsActive="False" Width="30" Height="30" HorizontalAlignment="Center" />
+                    <TextBlock
+                        x:Name="DropStatusText"
+                        HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"
+                        Opacity="0.85" MaxWidth="240" />
+                </StackPanel>
+            </Border>
 
-        <!-- Right column: results -->
-        <Grid Grid.Column="1" RowSpacing="8">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="*" />
-            </Grid.RowDefinitions>
+            <!-- Results -->
+            <Grid Grid.Column="1" RowSpacing="14">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
 
-            <TextBlock x:Name="SummaryText" Grid.Row="0" Text="No photos sorted yet." Style="{StaticResource BodyStrongTextBlockStyle}" />
+                <TextBlock
+                    Grid.Row="0"
+                    x:Name="SummaryText"
+                    Text="Drop some geotagged photos to get started."
+                    FontSize="16" Opacity="0.85" />
 
-            <ListView x:Name="ResultsList" Grid.Row="1">
-                <ListView.HeaderTemplate>
-                    <DataTemplate>
-                        <Grid Padding="4,0" ColumnDefinitions="2*,*,*,*">
-                            <TextBlock Grid.Column="0" Text="File" FontWeight="SemiBold" />
-                            <TextBlock Grid.Column="1" Text="Status" FontWeight="SemiBold" />
-                            <TextBlock Grid.Column="2" Text="Sector" FontWeight="SemiBold" />
-                            <TextBlock Grid.Column="3" Text="Bearing" FontWeight="SemiBold" />
-                        </Grid>
-                    </DataTemplate>
-                </ListView.HeaderTemplate>
-                <ListView.ItemTemplate>
-                    <DataTemplate>
-                        <Grid Padding="4,2" ColumnDefinitions="2*,*,*,*">
-                            <TextBlock Grid.Column="0" Text="{Binding FileName}" ToolTipService.ToolTip="{Binding SourcePath}" TextTrimming="CharacterEllipsis" />
-                            <TextBlock Grid.Column="1" Text="{Binding StatusText}" />
-                            <TextBlock Grid.Column="2" Text="{Binding SectorText}" />
-                            <TextBlock Grid.Column="3" Text="{Binding BearingText}" />
-                        </Grid>
-                    </DataTemplate>
-                </ListView.ItemTemplate>
-            </ListView>
+                <!-- Compass grid: NW N NE / W [total] E / SW S SE -->
+                <Grid Grid.Row="1" ColumnSpacing="10" RowSpacing="10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0" Grid.Column="0" x:Name="CellNorthWest" Style="{StaticResource SectorCardStyle}">
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="2">
+                            <TextBlock Text="↖" FontSize="20" HorizontalAlignment="Center" />
+                            <TextBlock Text="North-West" FontSize="12" Opacity="0.7" HorizontalAlignment="Center" />
+                            <TextBlock x:Name="CountNorthWest" Text="0" FontSize="22" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Row="0" Grid.Column="1" x:Name="CellNorth" Style="{StaticResource SectorCardStyle}">
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="2">
+                            <TextBlock Text="↑" FontSize="20" HorizontalAlignment="Center" />
+                            <TextBlock Text="North" FontSize="12" Opacity="0.7" HorizontalAlignment="Center" />
+                            <TextBlock x:Name="CountNorth" Text="0" FontSize="22" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Row="0" Grid.Column="2" x:Name="CellNorthEast" Style="{StaticResource SectorCardStyle}">
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="2">
+                            <TextBlock Text="↗" FontSize="20" HorizontalAlignment="Center" />
+                            <TextBlock Text="North-East" FontSize="12" Opacity="0.7" HorizontalAlignment="Center" />
+                            <TextBlock x:Name="CountNorthEast" Text="0" FontSize="22" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Grid.Row="1" Grid.Column="0" x:Name="CellWest" Style="{StaticResource SectorCardStyle}">
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="2">
+                            <TextBlock Text="←" FontSize="20" HorizontalAlignment="Center" />
+                            <TextBlock Text="West" FontSize="12" Opacity="0.7" HorizontalAlignment="Center" />
+                            <TextBlock x:Name="CountWest" Text="0" FontSize="22" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Row="1" Grid.Column="1" CornerRadius="16" Background="{ThemeResource AccentFillColorDefaultBrush}" Padding="12" MinHeight="96">
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="2">
+                            <TextBlock Text="🧭" FontSize="26" HorizontalAlignment="Center" />
+                            <TextBlock x:Name="TotalSortedText" Text="0" FontSize="26" FontWeight="Bold" HorizontalAlignment="Center" Foreground="White" />
+                            <TextBlock Text="sorted" FontSize="12" HorizontalAlignment="Center" Foreground="White" Opacity="0.9" />
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Row="1" Grid.Column="2" x:Name="CellEast" Style="{StaticResource SectorCardStyle}">
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="2">
+                            <TextBlock Text="→" FontSize="20" HorizontalAlignment="Center" />
+                            <TextBlock Text="East" FontSize="12" Opacity="0.7" HorizontalAlignment="Center" />
+                            <TextBlock x:Name="CountEast" Text="0" FontSize="22" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Grid.Row="2" Grid.Column="0" x:Name="CellSouthWest" Style="{StaticResource SectorCardStyle}">
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="2">
+                            <TextBlock Text="↙" FontSize="20" HorizontalAlignment="Center" />
+                            <TextBlock Text="South-West" FontSize="12" Opacity="0.7" HorizontalAlignment="Center" />
+                            <TextBlock x:Name="CountSouthWest" Text="0" FontSize="22" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Row="2" Grid.Column="1" x:Name="CellSouth" Style="{StaticResource SectorCardStyle}">
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="2">
+                            <TextBlock Text="↓" FontSize="20" HorizontalAlignment="Center" />
+                            <TextBlock Text="South" FontSize="12" Opacity="0.7" HorizontalAlignment="Center" />
+                            <TextBlock x:Name="CountSouth" Text="0" FontSize="22" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Row="2" Grid.Column="2" x:Name="CellSouthEast" Style="{StaticResource SectorCardStyle}">
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="2">
+                            <TextBlock Text="↘" FontSize="20" HorizontalAlignment="Center" />
+                            <TextBlock Text="South-East" FontSize="12" Opacity="0.7" HorizontalAlignment="Center" />
+                            <TextBlock x:Name="CountSouthEast" Text="0" FontSize="22" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <Button
+                    Grid.Row="2"
+                    x:Name="OpenOutputButton"
+                    Content="📂 Open output folder"
+                    Click="OnOpenOutputFolder"
+                    HorizontalAlignment="Left"
+                    Visibility="Collapsed" />
+
+                <Expander
+                    Grid.Row="3"
+                    x:Name="IssuesExpander"
+                    Header="0 skipped"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Stretch"
+                    IsExpanded="False"
+                    Visibility="Collapsed">
+                    <ListView x:Name="IssuesList" MaxHeight="240">
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <TextBlock Text="⚠️" />
+                                    <TextBlock Text="{Binding FileName}" ToolTipService.ToolTip="{Binding SourcePath}" />
+                                    <TextBlock Text="{Binding StatusText}" Opacity="0.7" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </Expander>
+            </Grid>
         </Grid>
     </Grid>
 </Window>

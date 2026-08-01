@@ -15,19 +15,33 @@ asset an inspection photo was taken from.
 
 ## How it works
 
-1. You enter the asset's centre point (latitude/longitude in decimal degrees).
-2. You choose a source folder of geotagged photos (and, optionally, an output
-   folder — it defaults to a `Sorted` subfolder next to the source).
-3. For each photo, the app reads the camera's GPS position from its EXIF
-   metadata and calculates the great-circle bearing from the asset centre to
-   that position.
+Built for fieldwork: no dialogs to fill in, no "Sort" button to remember to
+click.
+
+1. Enter the asset's centre point (latitude/longitude in decimal degrees) —
+   or click **Paste "lat, long"** to grab both values in one go from
+   whatever you copied off a map or GPS device.
+2. Drag photos — or a whole folder of photos — onto the drop zone. (Or click
+   it to browse instead, if that's easier with your hands full.)
+3. Sorting starts immediately. Each photo's camera GPS position is read from
+   its EXIF metadata, and the great-circle bearing from the asset centre to
+   that position is calculated.
 4. The bearing is classified into one of 8 compass sectors (each a 45°
    wedge centred on its direction — e.g. North covers 337.5°–22.5°) and the
    photo is **copied** (originals are left untouched) into a matching
    subfolder: `North`, `North-East`, `East`, `South-East`, `South`,
-   `South-West`, `West`, `North-West`.
-5. Photos with no GPS EXIF data (or a corrupt/unsupported file) are reported
-   as skipped rather than sorted, so nothing is silently misplaced.
+   `South-West`, `West`, `North-West`. The compass card grid fills in live
+   with a running count per direction.
+5. Photos with no GPS EXIF data (or a corrupt/unsupported file) are listed
+   under "skipped" rather than sorted, so nothing is silently misplaced.
+6. Keep dragging in more photos any time — counts keep accumulating for the
+   same asset. Moving on to a different turbine/pylon/etc.? Click **Start
+   new asset** to reset the counts and pick a fresh centre point.
+
+The output folder is chosen automatically the first time you drop something
+(a `Sorted` subfolder next to a dropped folder, or a `GeoCompassSort Sorted`
+folder in your Pictures library for loose files) — use **Change output
+folder** if you want it somewhere else.
 
 ## Project structure
 

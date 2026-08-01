@@ -16,28 +16,51 @@ public sealed class PhotoSorter
     }
 
     /// <summary>
-    /// Sorts every supported photo in <paramref name="sourceFolder"/> and returns one
-    /// result per file. Files are copied, not moved, so the source folder is left intact.
+    /// Sorts every supported photo found under <paramref name="paths"/> and returns one
+    /// result per file. Files are copied, not moved, so the originals are left intact.
     /// </summary>
+    /// <param name="paths">
+    /// A mix of individual file paths and/or folder paths — the shape a drag-and-drop
+    /// operation or a multi-file picker naturally produces. Folders are expanded; a
+    /// file that appears more than once (e.g. via an overlapping folder and a loose
+    /// file already inside it) is only sorted once.
+    /// </param>
     public IEnumerable<PhotoSortResult> SortPhotos(
-        string sourceFolder,
+        IEnumerable<string> paths,
         string outputFolder,
         GpsCoordinate assetCentre,
         bool includeSubfolders = false)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(sourceFolder);
+        ArgumentNullException.ThrowIfNull(paths);
         ArgumentException.ThrowIfNullOrWhiteSpace(outputFolder);
 
-        var searchOption = includeSubfolders ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
-
-        foreach (var filePath in System.IO.Directory.EnumerateFiles(sourceFolder, "*", searchOption))
+        foreach (var filePath in EnumerateImageFiles(paths, includeSubfolders))
         {
-            if (!_gpsReader.IsSupportedImage(filePath))
-            {
-                continue;
-            }
-
             yield return SortSinglePhoto(filePath, outputFolder, assetCentre);
+        }
+    }
+
+    private IEnumerable<string> EnumerateImageFiles(IEnumerable<string> paths, bool includeSubfolders)
+    {
+        var searchOption = includeSubfolders ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var path in paths)
+        {
+            if (System.IO.Directory.Exists(path))
+            {
+                foreach (var filePath in System.IO.Directory.EnumerateFiles(path, "*", searchOption))
+                {
+                    if (_gpsReader.IsSupportedImage(filePath) && seen.Add(filePath))
+                    {
+                        yield return filePath;
+                    }
+                }
+            }
+            else if (File.Exists(path) && _gpsReader.IsSupportedImage(path) && seen.Add(path))
+            {
+                yield return path;
+            }
         }
     }
 
